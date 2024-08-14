@@ -12,9 +12,10 @@ nhead=8
 nhid=512
 nlayers=6
 dropout=0.1
+model_subname = "s50"
 
 #optimizer and loss 
 learning_rate = 0.001
 
 #training
-epoches = 1 
+epoches = 2

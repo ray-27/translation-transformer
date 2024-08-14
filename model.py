@@ -58,7 +58,14 @@ class PositionalEncoding(nn.Module):
 class translation_model(nn.Module):
     def __init__(self,src_vocab_size, tgt_vocab_size, emb_dim=64, nhead=8, nhid=512, nlayers=6, max_len=100,dropout=0.5):
         super().__init__()
+        self.emb_dim=emb_dim
+        self.nhead=nhead
+        self.nhid=nhid
+        self.nlayers=nlayers
+        self.seq_len=max_len
+        self.dropout=dropout
 
+        
         self.src_embedding = nn.Embedding(src_vocab_size, emb_dim)
         self.tgt_embedding = nn.Embedding(tgt_vocab_size, emb_dim)
 

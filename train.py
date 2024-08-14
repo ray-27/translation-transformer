@@ -5,10 +5,13 @@ from torch.optim import Adam
 from sklearn.model_selection import train_test_split
 from model import translation_model, gpt_TransformerModel
 from dataset import translation_dataset
+from inference import val
 from tqdm import tqdm
 import config
 import json
 from colorama import init,Fore
+from util import seq_vs_loss
+import copy
 init(autoreset=True)
 
 #load the config values
@@ -22,6 +25,7 @@ nhead=config.nhead
 nhid=config.nhid
 nlayers=config.nlayers
 dropout=config.dropout
+model_name=config.model_subname
 lr=config.learning_rate
 epoches = config.epoches
 
@@ -29,9 +33,11 @@ def device_is():
     if torch.cuda.is_available():
             device = torch.device('cuda')
             print("Device is " + Fore.GREEN + "CUDA")
-    else:
+    elif torch.backends.mps.is_available():
         device = torch.device('mps')
-        print("Device is "+Fore.YELLOW+  "CPU")
+        print("Device is "+Fore.YELLOW+  "MPS")
+    else:
+        print("Device is CPU")
     
     return device
 
@@ -55,10 +61,11 @@ def batch_conv(hin,i):
     
     return torch.stack(tensor_li,dim=0)
 
+
 def train():
     device = device_is()
     # loading the data 
-    data = pd.read_csv('data/hugging_data.csv',nrows=100)
+    data = pd.read_csv('data/hugging_data.csv',nrows=10)
     # train_df,val_df = train_test_split(data,test_size=0.1)
     dataset = translation_dataset(data,seq_len=seq_len)
     loader = torch.utils.data.DataLoader(dataset,
@@ -132,7 +139,7 @@ def train():
 
                 output = model(eng, converted_batch)
             
-
+                # print(f'output shape {output.shape}')
                 output_dim = output.shape[-1] # gives the last value in the shape
                 output = output.contiguous().view(-1, output_dim)
                 trg_labels = hin.contiguous().view(-1).to(torch.long)
@@ -147,18 +154,22 @@ def train():
         
                 tqdm.write(f"Batch: {ba+1}, sequence len: {i}, Loss: {seq_loss}")
                 seq_loss_lis.append(seq_loss)
-        
+                loss_lis.append(seq_loss)
+            seq_vs_loss(seq_loss_lis,ba+1,epoch,seq_len)
             batch_loss += sum(seq_loss_lis)/seq_len
-            tqdm.write(f"batch loss of {ba+1} is {batch_loss}")
+            tqdm.write(f"batch loss of {ba+1} is {batch_loss/batch_size}")
             epoch_loss += batch_loss
         ## valadition 
 
         tqdm.write(f"Epoch {epoch} finished with average loss: {epoch_loss/l}")
         loss_lis.append(epoch_loss / l)
+        mod = copy.deepcopy(model)
+        hindi = val(mod.to('cpu'))
+        tqdm.write(f"Epoch {epoch}, hindi output : {hindi}")
     
     print(Fore.GREEN + "Training complete")
     #saving the model
-    torch.save(model,'model_loads/translation_model.pth')
+    torch.save(model,f'model_loads/translation_model_{model_name}.pth')
     print(Fore.GREEN + "Model saved")
 
 if __name__ == "__main__":
