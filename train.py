@@ -65,7 +65,10 @@ def batch_conv(hin,i):
 def train():
     device = device_is()
     # loading the data 
-    data = pd.read_csv('data/hugging_data.csv',nrows=10)
+    # data = pd.read_csv('data/hugging_data.csv',nrows=10)
+    # for directly downloading from hugging face 
+    splits = {'train': 'train.csv', 'validation': 'validation.csv', 'test': 'test.csv'}
+    data = pd.read_csv("hf://datasets/Amani27/massive_translation_dataset/" + splits["train"])
     # train_df,val_df = train_test_split(data,test_size=0.1)
     dataset = translation_dataset(data,seq_len=seq_len)
     loader = torch.utils.data.DataLoader(dataset,

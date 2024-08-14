@@ -1,6 +1,11 @@
 data
 __pycache__
-model_loads
+model_loads/translation_model.pth
+model_loads/translation_model_s50.pth
+model_loads/eng_vocab.json
+model_loads/hin_vocab.json
+model_loads/seq_len_vs_loss_batch_1_epoch_0.png
+model_loads/seq_len_vs_loss_batch_1_epoch_1.png
 try.py
 test.ipynb
 analysi.ipynb
